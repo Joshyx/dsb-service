@@ -19,32 +19,30 @@ func main() {
 	content, err := account.GetContent()
 
 	if err != nil {
-		// exit on error
 		log.Printf("Error: %s", err)
 		os.Exit(1)
 	}
 
-	// get timetables
 	timetables := content.GetTimetables()
 	if len(timetables) == 0 {
 		log.Println("no timetables found")
 		return
 	}
-    todays := Filter(timetables, func(mi dsb.MenuItem) bool {
-        return strings.Contains(mi.Title, "heute")
-    })
-    tomorrows := Filter(timetables, func(mi dsb.MenuItem) bool {
-        return strings.Contains(mi.Title, "morgen")
-    })
+	todays := Filter(timetables, func(mi dsb.MenuItem) bool {
+		return strings.Contains(mi.Title, "heute")
+	})[0].Childs
+	tomorrows := Filter(timetables, func(mi dsb.MenuItem) bool {
+		return strings.Contains(mi.Title, "morgen")
+	})[0].Childs
 	todaysImages := Map(todays, func(item dsb.MenuItem) image.Image {
-		return loadImageFromURL(item.GetURL())
+		return loadImageFromURL(item.Detail)
 	})
-    tomorrowsImages := Map(tomorrows, func(item dsb.MenuItem) image.Image {
-		return loadImageFromURL(item.GetURL())
+	tomorrowsImages := Map(tomorrows, func(item dsb.MenuItem) image.Image {
+		return loadImageFromURL(item.Detail)
 	})
-    img1 := mergeVertical(todaysImages)
-    img2 := mergeVertical(tomorrowsImages)
-    
+	img1 := mergeVertical(todaysImages)
+	img2 := mergeVertical(tomorrowsImages)
+
 	buf := new(bytes.Buffer)
 	jpeg.Encode(buf, mergeTwoHorizontal(img1, img2), nil)
 	data := buf.Bytes()
@@ -133,11 +131,11 @@ func Map[T interface{}, U interface{}](vs []T, f func(T) U) []U {
 	return vsm
 }
 func Filter[T interface{}](vs []T, f func(T) bool) []T {
-    vsm := make([]T, 0)
+	vsm := make([]T, 0)
 	for _, v := range vs {
 		if f(v) {
-            vsm = append(vsm, v)
-        }
+			vsm = append(vsm, v)
+		}
 	}
 	return vsm
 }
